@@ -1,43 +1,58 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 # 데이터셋 읽기
 df = pd.read_csv('test_data.csv')
 print(df[:5])
 
+# categorical data one-hot encoding
+df['평일/주말'] = df['평일/주말'].apply(lambda x: 0 if x == 'Weekday' else 1)
+
+# # 0과 1의 비율 계산
+# ratio = df['평일/주말'].value_counts(normalize=True) * 100
+# print(df[['평일/주말']])
+# print("\n0(평일)과 1(주말)의 비율:")
+# print(ratio)
+# exit()
+
 # 데이터 분석
 # '예약시간' 열을 datetime 형식으로 변환
 df['예약시간'] = pd.to_datetime(df['예약시간'])
+# print(df['예약시간'])
+
 
 # '예약시간'에서 시간대(hour) 추출
 df['예약시간대'] = df['예약시간'].dt.hour
-print(df['예약시간대'])
+print(df[:5])
 
-# 시각화
-fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(12, 12))  # 2x2 그리드로 변경
 
-# 평일 대비 주말 정비 횟수
-weekend_weekday = df['평일/주말'].value_counts()
-weekend_weekday.plot(kind='pie', ax=axes[0, 0], autopct='%1.1f%%', startangle=140, colors=['#ff9999','#66b3ff'])
-axes[0, 0].set_title('Weekday vs. Weekend Visits')
-axes[0, 0].set_ylabel('')
 
-# 시간대별 방문 분포
-hour_distribution = df['예약시간대'].value_counts().sort_index()
-sns.lineplot(x=hour_distribution.index, y=hour_distribution.values, ax=axes[0, 1], marker='o', color='green')
-axes[0, 1].set_title('Time of Day Visit Distribution')
-axes[0, 1].set_xlabel('Hour of Day')
-axes[0, 1].set_ylabel('Visit Frequency')
 
-# 누적 정비 기록 수 분포
-customer_visits_total = df['고객명'].value_counts()
-sns.histplot(customer_visits_total, bins=30, kde=False, color='skyblue', ax=axes[1, 0])
-axes[1, 0].set_title('Accumulated Customer Visits Distribution')
-axes[1, 0].set_xlabel('Number of Visits')
-axes[1, 0].set_ylabel('Number of Customers')
+# 고객별 특성 추출: 주중/주말 방문 비율, 시간대별 평균 방문 시간
+df['weekday_visit'] = df['예약시간'].apply(lambda x: 1 if x.weekday() < 5 else 0)
+customer_features = df.groupby('고객명').agg({'weekday_visit': 'mean', '예약시간대': 'mean'}).reset_index()
 
-axes[1, 1].axis('off')
+# 특성 스케일링
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(customer_features[['weekday_visit', '예약시간대']])
 
-plt.tight_layout()
+# K-Means 클러스터링
+kmeans = KMeans(n_clusters=4, random_state=42)
+customer_features['cluster'] = kmeans.fit_predict(scaled_features)
+
+# PCA를 사용한 차원 축소
+pca = PCA(n_components=2)
+pca_components = pca.fit_transform(scaled_features)
+
+# 클러스터링 결과 시각화
+plt.figure(figsize=(10, 8))
+plt.scatter(pca_components[:, 0], pca_components[:, 1], c=customer_features['cluster'], cmap='viridis', marker='o', alpha=0.7)
+plt.title('Customer Clustering based on Visit Characteristics')
+plt.xlabel('PCA Component 1')
+plt.ylabel('PCA Component 2')
+plt.colorbar(label='Cluster')
 plt.show()

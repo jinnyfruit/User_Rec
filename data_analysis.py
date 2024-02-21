@@ -8,7 +8,6 @@ from mpl_toolkits.mplot3d import Axes3D  # 3D plotting을 위한 모듈
 from sklearn.metrics import silhouette_score
 
 df = pd.read_csv('test_data.csv')
-# '예약시간'에서 시간대(hour) 추출
 
 # categorical data one-hot encoding
 df['평일/주말'] = df['평일/주말'].apply(lambda x: 0 if x == 'Weekday' else 1)
@@ -16,19 +15,44 @@ df['평일/주말'] = df['평일/주말'].apply(lambda x: 0 if x == 'Weekday' el
 df['예약시간'] = pd.to_datetime(df['예약시간'])
 # print(df['예약시간'])
 
-
 # '예약시간'에서 시간대(hour) 추출
 df['예약시간'] = df['예약시간'].dt.hour
 print(df[:5])
 
+
+# data visualization
+fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(12, 12))  # 2x2 그리드로 변경
+
+# 평일 대비 주말 정비 횟수
+weekend_weekday = df['평일/주말'].value_counts()
+weekend_weekday.plot(kind='pie', ax=axes[0, 0], autopct='%1.1f%%', startangle=140, colors=['#ff9999','#66b3ff'])
+axes[0, 0].set_title('Weekday vs. Weekend Visits')
+axes[0, 0].set_ylabel('')
+
+# 시간대별 방문 분포
+hour_distribution = df['예약시간'].value_counts().sort_index()
+sns.lineplot(x=hour_distribution.index, y=hour_distribution.values, ax=axes[0, 1], marker='o', color='green')
+axes[0, 1].set_title('Time of Day Visit Distribution')
+axes[0, 1].set_xlabel('Hour of Day')
+axes[0, 1].set_ylabel('Visit Frequency')
+
+# 누적 정비 기록 수 분포
+customer_visits_total = df['고객명'].value_counts()
+sns.histplot(customer_visits_total, bins=30, kde=False, color='skyblue', ax=axes[1, 0])
+axes[1, 0].set_title('Accumulated Customer Visits Distribution')
+axes[1, 0].set_xlabel('Number of Visits')
+axes[1, 0].set_ylabel('Number of Customers')
+
+axes[1, 1].axis('off')
+
+plt.tight_layout()
+plt.show()
+
 # 고객별로 주중/주말 방문 비율과 시간대별 평균 방문 시간 계산 (주중 1, 주말 0)
-# 주중/주말 칼럼이 이미 0과 1로 인코딩되었다고 가정
 customer_features = df.groupby('고객명').agg({
     '평일/주말': 'mean',  # 주중/주말 방문 비율
     '예약시간': 'mean'  # 시간대별 평균 방문 시간
 }).reset_index()
-
-# 데이터 스케일링 필요 없음 (이미 0~1과 0~24 범위 내에 있음)
 
 # Elbow 방법을 사용하여 최적의 K값 찾기
 # 주중/주말 방문 비율과 시간대별 평균 방문 시간을 기반으로 한 데이터셋 준비
@@ -74,10 +98,10 @@ plt.show()
 
 # 최적의 K값을 제안
 optimal_k_silhouette = range(2, 11)[silhouette_scores.index(max(silhouette_scores))]
-print(f"Silhouette 점수가 최대인 최적의 K값: {optimal_k_silhouette}")
+print(f"Silhouette 점수가  최대인 최적의 K값: {optimal_k_silhouette}")
 
-# K-Means 클러스터링 - 최적 K 값으로 클러스터링
-kmeans = KMeans(n_clusters=optimal_k_silhouette, random_state=42)
+# K-Means 클러스터링 - 최적 K 값으로 클러스터링 진행
+kmeans = KMeans(n_clusters=6, random_state=42)
 customer_features['cluster'] = kmeans.fit_predict(customer_features[['평일/주말', '예약시간']])
 
 # 클러스터링 결과 시각화
