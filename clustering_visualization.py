@@ -6,10 +6,10 @@ from sklearn.metrics import silhouette_score
 import numpy as np
 import seaborn as sns
 
-# 예제 데이터 로드 (가정)
+# Load dataset
 df = pd.read_csv('test_data.csv')
 
-# 카테고리 데이터 원-핫 인코딩 (주중: 0, 주말: 100)
+# 카테고리 데이터 원-핫 인코딩 (주중: 0, 주말: 1)
 df['평일/주말'] = df['평일/주말'].apply(lambda x: 0 if x == 'Weekday' else 1)
 
 # '예약시간'을 datetime으로 변환 후 시간(hour) 추출
@@ -32,7 +32,7 @@ customer_features = df.groupby('고객명').agg({
 }).reset_index()
 
 # 클러스터링
-kmeans = KMeans(n_clusters=4, random_state=42)  # k 값은 예시로 4를 사용
+kmeans = KMeans(n_clusters=4, random_state=42)  # k 값은 우선 4로 설정
 customer_features['cluster'] = kmeans.fit_predict(customer_features[['평일/주말', '오전/오후']])
 
 # 시각화
@@ -47,6 +47,7 @@ plt.show()
 
 exit()
 
+#-------------------------------------------------------------------------------------------------------------#
 # 클러스터링 진행
 kmeans = KMeans(n_clusters=6, random_state=42)
 customer_features['cluster'] = kmeans.fit_predict(customer_features[['평일/주말', '예약시간']])
