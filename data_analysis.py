@@ -7,36 +7,32 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # 3D plotting을 위한 모듈
 from sklearn.metrics import silhouette_score
 
+# Read dataset
 df = pd.read_csv('test_data.csv')
 
-# categorical data one-hot encoding
+# Data Preprocessing
+# Categorical data one-hot encoding (범주형 데이터 인코딩)
 df['평일/주말'] = df['평일/주말'].apply(lambda x: 0 if x == 'Weekday' else 1)
+df['예약시간'] = pd.to_datetime(df['예약시간']) # 시간형 데이터로 변환
+df['예약시간'] = df['예약시간'].dt.hour # 예약 시간대 추출
 
-df['예약시간'] = pd.to_datetime(df['예약시간'])
-# print(df['예약시간'])
-
-# '예약시간'에서 시간대(hour) 추출
-df['예약시간'] = df['예약시간'].dt.hour
-print(df[:5])
-
-
-# data visualization
+# Data visualization
 fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(12, 12))  # 2x2 그리드로 변경
 
-# 평일 대비 주말 정비 횟수
+# 전체 데이터 기준 평일/주말 정비횟수 비율
 weekend_weekday = df['평일/주말'].value_counts()
 weekend_weekday.plot(kind='pie', ax=axes[0, 0], autopct='%1.1f%%', startangle=140, colors=['#ff9999','#66b3ff'])
 axes[0, 0].set_title('Weekday vs. Weekend Visits')
 axes[0, 0].set_ylabel('')
 
-# 시간대별 방문 분포
+# 전체 데이터 기준 정비센터 시간대별 방문 분포
 hour_distribution = df['예약시간'].value_counts().sort_index()
 sns.lineplot(x=hour_distribution.index, y=hour_distribution.values, ax=axes[0, 1], marker='o', color='green')
 axes[0, 1].set_title('Time of Day Visit Distribution')
 axes[0, 1].set_xlabel('Hour of Day')
 axes[0, 1].set_ylabel('Visit Frequency')
 
-# 누적 정비 기록 수 분포
+# 고객별 누적 정비 기록 수 분포
 customer_visits_total = df['고객명'].value_counts()
 sns.histplot(customer_visits_total, bins=30, kde=False, color='skyblue', ax=axes[1, 0])
 axes[1, 0].set_title('Accumulated Customer Visits Distribution')
@@ -55,7 +51,6 @@ customer_features = df.groupby('고객명').agg({
 }).reset_index()
 
 # Elbow 방법을 사용하여 최적의 K값 찾기
-# 주중/주말 방문 비율과 시간대별 평균 방문 시간을 기반으로 한 데이터셋 준비
 features = customer_features[['평일/주말', '예약시간']]
 
 # Elbow 방법에 필요한 SSE(Sum of Squared Errors) 값 저장을 위한 리스트
@@ -63,7 +58,7 @@ sse = []
 # Silhouette 점수 저장을 위한 리스트
 silhouette_scores = []
 
-# K값의 범위 설정 (1에서 10까지 시도)
+# K값의 범위 설정 (2에서 10까지 시도)
 k_range = range(2, 11)
 
 for k in k_range:
