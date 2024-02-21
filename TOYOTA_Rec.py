@@ -4,7 +4,6 @@ import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-
 # 데이터셋 읽기
 df = pd.read_csv('test_data.csv')
 print(df[:5])
