@@ -1,57 +1,73 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
 from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-# 데이터셋 읽기
-df = pd.read_csv('test_data.csv')
-print(df[:5])
+from sklearn.metrics import silhouette_score
+from datetime import datetime, timedelta
+import random
 
-# categorical data one-hot encoding
-df['평일/주말'] = df['평일/주말'].apply(lambda x: 0 if x == 'Weekday' else 1)
+# Load dataset
+df = pd.read_csv('data.csv',low_memory=False)
 
-# # 0과 1의 비율 계산
-# ratio = df['평일/주말'].value_counts(normalize=True) * 100
-# print(df[['평일/주말']])
-# print("\n0(평일)과 1(주말)의 비율:")
-# print(ratio)
-# exit()
+# Data preprocessing
+df['예약 시간'] = df['예약 시간'].str.replace('시', '').astype(int)
+요일_매핑 = {'월': 0, '화': 1, '수': 2, '목': 3, '금': 4, '토': 5, '일': 6}
+df['요일'] = df['요일'].map(요일_매핑)
 
-# 데이터 분석
-# '예약시간' 열을 datetime 형식으로 변환
-df['예약시간'] = pd.to_datetime(df['예약시간'])
-# print(df['예약시간'])
+# Select one vehicle's maintenance history randomly
+unique_vehicles = df['차량번호'].unique()
+selected_vehicle = np.random.choice(unique_vehicles)
+vehicle_history = df[df['차량번호'] == selected_vehicle]
+print(selected_vehicle)
+print()
+print(vehicle_history)
+print()
 
+# Calculate average reservation time and day of the week
+avg_reservation_time = vehicle_history['예약 시간'].mean()
+avg_day_of_week = vehicle_history['요일'].mean()
+print(avg_reservation_time)
+print()
+print(avg_day_of_week)
+print()
 
-# '예약시간'에서 시간대(hour) 추출
-df['예약시간대'] = df['예약시간'].dt.hour
-print(df[:5])
+# Determine the most frequently visited service center
+most_frequent_center = vehicle_history['서비스센터명'].mode()[0]
+print(most_frequent_center)
+print()
 
-
-
-
-# 고객별 특성 추출: 주중/주말 방문 비율, 시간대별 평균 방문 시간
-df['weekday_visit'] = df['예약시간'].apply(lambda x: 1 if x.weekday() < 5 else 0)
-customer_features = df.groupby('고객명').agg({'weekday_visit': 'mean', '예약시간대': 'mean'}).reset_index()
-
-# 특성 스케일링
-scaler = StandardScaler()
-scaled_features = scaler.fit_transform(customer_features[['weekday_visit', '예약시간대']])
-
-# K-Means 클러스터링
-kmeans = KMeans(n_clusters=4, random_state=42)
-customer_features['cluster'] = kmeans.fit_predict(scaled_features)
-
-# PCA를 사용한 차원 축소
-pca = PCA(n_components=2)
-pca_components = pca.fit_transform(scaled_features)
-
-# 클러스터링 결과 시각화
-plt.figure(figsize=(10, 8))
-plt.scatter(pca_components[:, 0], pca_components[:, 1], c=customer_features['cluster'], cmap='viridis', marker='o', alpha=0.7)
-plt.title('Customer Clustering based on Visit Characteristics')
-plt.xlabel('PCA Component 1')
-plt.ylabel('PCA Component 2')
-plt.colorbar(label='Cluster')
+# Visualize the average reservation time and day of the week
+plt.figure(figsize=(10, 6))
+sns.barplot(x=['Average Reservation Time', 'Average Day of Week'], y=[avg_reservation_time, avg_day_of_week])
+plt.ylabel('Average Value')
+plt.title('Average Reservation Time and Day of Week for Vehicle ' + selected_vehicle)
 plt.show()
+
+# Generate 5 random available reservation dates
+today = datetime.today()
+available_dates = [today + timedelta(days=i) for i in range(1, 6)]
+print(available_dates)
+print()
+
+# Convert avg_day_of_week to closest day in available_dates
+avg_day_int = round(avg_day_of_week)
+recommended_dates = []
+
+for date in available_dates:
+    if date.weekday() == avg_day_int:
+        recommended_dates.append(date)
+        if len(recommended_dates) == 2:
+            break
+
+# If less than 2 dates were found, fill in with closest available dates
+while len(recommended_dates) < 2:
+    closest_date = min(available_dates, key=lambda x: abs(x.weekday() - avg_day_int))
+    recommended_dates.append(closest_date)
+    available_dates.remove(closest_date)
+
+# Print results
+print(f"Most frequently visited service center: {most_frequent_center}")
+print(f"추천 예약 시간: {round(avg_reservation_time)}:00")
+print(f"추천 요일: {avg_day_of_week}")
+print("가능한 추천일자:", recommended_dates)
