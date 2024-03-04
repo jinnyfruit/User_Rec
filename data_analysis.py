@@ -101,7 +101,7 @@ customer_features = df.groupby('예약 휴대폰번호').agg({
 # print(f"Silhouette 점수가  최대인 최적의 K값: {optimal_k_silhouette}")
 
 # K-Means 클러스터링 - 최적 K 값으로 클러스터링 진행
-kmeans = KMeans(n_clusters=5, random_state=42)
+kmeans = KMeans(n_clusters=9, random_state=42)
 customer_features['cluster'] = kmeans.fit_predict(customer_features[['요일', '예약 시간']])
 
 # 클러스터링 결과 시각화

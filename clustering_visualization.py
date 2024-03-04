@@ -35,7 +35,14 @@ df = pd.read_csv('data.csv',low_memory=False)
 # exit()
 
 # 카테고리 데이터 원-핫 인코딩 (주중: 0, 주말: 1)
-df['요일'] = df['요일'].apply(lambda x: 0 if x in ['월', '화', '수', '목', '금'] else 1 if x in ['토','일'] else x)
+df['요일'] = df['요일'].apply(lambda x:
+                              0 if x == '월' else
+                              1 if x == '화' else
+                              2 if x == '수' else
+                              3 if x == '목' else
+                              4 if x == '금' else
+                              5 if x == '토' else
+                              6)
 
 df['예약 시간'] = df['예약 시간'].str.replace('시', '').astype(int)
 
@@ -46,25 +53,25 @@ customer_features = df.groupby('차량번호').agg({
 }).reset_index()
 
 # 오전/오후 변수 추가 (오전: 0, 오후: 1)
-df['오전/오후'] = df['예약 시간'].apply(lambda x: 0 if x < 12 else 1)
+#df['오전/오후'] = df['예약 시간'].apply(lambda x: 0 if x < 12 else 1)
 
 # 고객별 평균 계산
 customer_features = df.groupby('차량번호').agg({
     '요일': 'mean',
-    '오전/오후': 'mean'
+    '예약 시간': 'mean'
 }).reset_index()
 
 # 클러스터링
-kmeans = KMeans(n_clusters=9, random_state=42)  # k 값은 우선 4로 설정
-customer_features['cluster'] = kmeans.fit_predict(customer_features[['요일', '오전/오후']])
+kmeans = KMeans(n_clusters=8, random_state=42)  # k 값은 우선 4로 설정
+customer_features['cluster'] = kmeans.fit_predict(customer_features[['요일', '예약 시간']])
 
 # 시각화
 plt.figure(figsize=(8, 6))
-sns.scatterplot(x='요일', y='오전/오후', hue='cluster', data=customer_features, palette='viridis', alpha=0.7)
+sns.scatterplot(x='요일', y='예약 시간', hue='cluster', data=customer_features, palette='viridis', alpha=0.7)
 plt.title('Customer Clustering based on Weekday/Weekend and Time of Day')
 plt.xlabel('Weekday/Weekend')
 plt.ylabel('Morning/Afternoon')
-plt.yticks([0, 1], ['Morning', 'Afternoon'])
+plt.yticks([0, 24], ['0시', '24시'])
 plt.grid(True)
 plt.show()
 
