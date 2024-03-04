@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.utils import shuffle
 
 # 데이터 로드 및 가공
-df = pd.read_csv('data.csv', low_memory=False)
+df = pd.read_csv('result/data.csv', low_memory=False)
 
 # 차량번호별로 그룹화하고 정비이력 기록이 6 이상인 차량만 필터링한 뒤, 100개만 무작위 선택
 filtered_df = df.groupby('차량번호').filter(lambda x: len(x) >= 6)
