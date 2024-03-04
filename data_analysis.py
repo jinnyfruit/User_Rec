@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D  # 3D plotting을 위한 모듈
 from sklearn.metrics import silhouette_score
 
 # Read dataset
-df = pd.read_csv('data.csv')
+df = pd.read_csv('result/data.csv')
 print(df)
 df['요일'] = df['요일'].apply(lambda x: 0 if x in ['월', '화', '수', '목', '금'] else 1 if x in ['토','일'] else x)
 #print(df['요일'])
@@ -21,8 +21,8 @@ df['요일'] = df['요일'].apply(lambda x: 0 if x in ['월', '화', '수', '목
 df['예약 시간'] = df['예약 시간'].str.replace('시', '').astype(int)
 print(df['예약 시간'])
 
-# # Data visualization
-# fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(12, 12))  # 2x2 그리드로 변경
+# Data visualization
+fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(12, 12))  # 2x2 그리드로 변경
 #
 # # 전체 데이터 기준 평일/주말 정비횟수 비율
 # weekend_weekday = df['요일'].value_counts()
@@ -37,17 +37,18 @@ print(df['예약 시간'])
 # axes[0, 1].set_xlabel('Hour of Day')
 # axes[0, 1].set_ylabel('Visit Frequency')
 #
-# # 고객별 누적 정비 기록 수 분포
-# customer_visits_total = df['차량번호'].value_counts()
-# sns.histplot(customer_visits_total, bins=30, kde=False, color='skyblue', ax=axes[1, 0])
-# axes[1, 0].set_title('Accumulated Customer Visits Distribution')
-# axes[1, 0].set_xlabel('Number of Visits')
-# axes[1, 0].set_ylabel('Number of Customers')
-#
-# axes[1, 1].axis('off')
-#
-# plt.tight_layout()
-# plt.show()
+# 고객별 누적 정비 기록 수 분포
+customer_visits_total = df['차량번호'].value_counts()
+sns.histplot(customer_visits_total, bins=30, kde=False, color='skyblue', ax=axes[1, 0])
+axes[1, 0].set_title('Accumulated Customer Visits Distribution')
+axes[1, 0].set_xlabel('Number of Visits')
+axes[1, 0].set_ylabel('Number of Customers')
+
+axes[1, 1].axis('off')
+
+plt.tight_layout()
+plt.show()
+exit()
 
 # 고객별로 주중/주말 방문 비율과 시간대별 평균 방문 시간 계산 (주중 1, 주말 0)
 customer_features = df.groupby('예약 휴대폰번호').agg({
