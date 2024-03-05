@@ -81,7 +81,6 @@ scatter = ax.scatter(customer_features['평일/주말'], customer_features['예�
 centers = kmeans.cluster_centers_
 ax.scatter(centers[:, 0], centers[:, 1], np.arange(len(centers)), c='red', s=200, alpha=0.5, marker='x')
 
-# 라벨링
 ax.set_title('3D Visualization of Customer Clustering')
 ax.set_xlabel('Weekday/Weekend Ratio')
 ax.set_ylabel('Average Visit Time of Day')
