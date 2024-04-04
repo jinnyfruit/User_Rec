@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Load dataset
-df = pd.read_csv('data.csv', low_memory=False)
+df = pd.read_csv('result/data.csv', low_memory=False)
 
 # Create a copy of the dataframe to preserve original '요일' and '예약 시간' values
 df_original = df.copy()
